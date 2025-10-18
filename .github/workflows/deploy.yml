@@ -27,6 +27,9 @@ jobs:
       - name: 🧪 Run Tests
         run: npm test
 
+      - name: Set DATABASE_URL
+        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+        
       - name: 🔁 Prisma Migrate
         run: npx prisma migrate deploy
 
