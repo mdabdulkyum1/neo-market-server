@@ -29,9 +29,13 @@ jobs:
 
       - name: Set DATABASE_URL
         run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
-        
-      - name: 🔁 Prisma Migrate
-        run: npx prisma migrate deploy
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: 🔁 Sync Prisma Schema with MongoDB
+        run: npx prisma db push
+
 
       - name: 🚀 Deploy to Vercel
         uses: amondnet/vercel-action@v25
