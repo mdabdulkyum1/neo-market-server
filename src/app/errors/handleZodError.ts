@@ -2,42 +2,49 @@ import { ZodError, ZodIssue } from "zod";
 import { IGenericErrorMessage, TErrorDetails, TGenericErrorResponse } from "../interface/error";
 import { IGenericErrorResponse } from "../interface/common";
 
-const handleZodError2 = (err: ZodError): TGenericErrorResponse => {
-  let message = "";
+export const handleZodError2 = (err: ZodError): TGenericErrorResponse => {
+  const messageParts: string[] = [];
+
   const errorDetails: TErrorDetails = {
     issues: err.issues.map((issue: ZodIssue) => {
-      message =
-        message + issue.message == "Expected number, received string"
-          ? issue?.path[issue.path.length - 1] + " " + issue.message
-          : message + ". " + issue.message;
+      const path = issue.path[issue.path.length - 1];
+      const safePath = typeof path === "symbol" ? String(path) : path;
+
+      const msg =
+        issue.message === "Expected number, received string"
+          ? `${safePath} ${issue.message}`
+          : issue.message;
+
+      messageParts.push(msg);
+
       return {
-        path: issue?.path[issue.path.length - 1],
+        path: safePath,
         message: issue.message,
       };
     }),
   };
 
-  const statusCode = 400;
-
   return {
-    statusCode,
-    message,
+    statusCode: 400,
+    message: messageParts.join(". "),
     errorDetails,
   };
 };
 
+// handleZodError corrected
 const handleZodError = (error: ZodError): IGenericErrorResponse => {
   const errors: IGenericErrorMessage[] = error.issues.map((issue: ZodIssue) => {
+    const path = issue.path[issue.path.length - 1];
+    const safePath = typeof path === "symbol" ? String(path) : path;
+
     return {
-      path: issue?.path[issue.path.length - 1],
-      message: issue?.message,
+      path: safePath,
+      message: issue.message,
     };
   });
 
-  const statusCode = 400;
-
   return {
-    statusCode,
+    statusCode: 400,
     message: "Validation Error",
     errorMessages: errors,
   };
