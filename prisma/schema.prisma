@@ -1,5 +1,4 @@
 
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,23 +9,83 @@ datasource db {
 }
 
 model User {
-  id                   String         @id @default(auto()) @map("_id") @db.ObjectId
-  name                 String?
-  email                String         @unique
-  password             String?
-  image                String?
-  isEmailVerified      Boolean        @default(false)
-  role                 Role           @default(USER)
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  name            String?
+  email           String       @unique
+  password        String?      
+  referralCode    String       @unique
+  image           String?
+  isEmailVerified Boolean      @default(false)
+  role            Role         @default(USER)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  isProMember     Boolean      @default(false)
+  credits         Int          @default(0)
 
-  isProMember      Boolean  @default(false)
+  // Relations
+  referralsGiven  Referral[]   @relation("ReferralsGiven")
+  referralsGotten Referral[]   @relation("ReferralsGotten")
+  purchases       Purchase[]
+  dashboard       Dashboard?
 
   @@map("users")
-
 }
 
 enum Role {
   ADMIN
-  USER  
+  USER
+}
+
+model Referral {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  referrerId   String    @db.ObjectId
+  referredId   String    @db.ObjectId
+  referralCode String
+  status       ReferralStatus    @default(PENDING)
+  convertedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  purchaseId   String?   @unique @db.ObjectId  
+
+  // Relations
+  referrer     User      @relation("ReferralsGiven", fields: [referrerId], references: [id])
+  referred     User      @relation("ReferralsGotten", fields: [referredId], references: [id])
+  purchase     Purchase? @relation("ReferralPurchase", fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([referrerId, referredId]) 
+
+  @@map("referral")
+}
+
+enum ReferralStatus {
+  PENDING
+  CONVERTED
+}
+
+
+model Purchase {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String    @db.ObjectId
+  productId     String
+  amount        Float
+  isFirstPurchase Boolean @default(true)
+  purchaseDate  DateTime  @default(now())
+  referralId    String?   @unique @db.ObjectId  
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  referral      Referral? @relation("ReferralPurchase") 
+
+  @@index([userId]) 
+  @@map("purchase")
+}
+
+model Dashboard {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @unique @db.ObjectId
+  referredUsers  Int      @default(0)
+  convertedUsers Int      @default(0)
+  totalCredits   Int      @default(0)
+
+  user           User     @relation(fields: [userId], references: [id])
+  @@map("dashboard")
 }
