@@ -2,6 +2,7 @@ import cors from "cors";
 import express, { Application, Request, Response, NextFunction } from "express";
 import httpStatus from "http-status";
 import morgan from "morgan";
+import router from "./app/routes";
 
 
 const app: Application = express();
@@ -24,6 +25,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use(morgan("dev"));
+
+app.use("api/v1", router);
 
 app.use((req: Request, res: Response) => {
   res.status(httpStatus.NOT_FOUND).json({
