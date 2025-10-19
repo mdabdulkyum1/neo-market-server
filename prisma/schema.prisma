@@ -19,7 +19,6 @@ model User {
   role            Role         @default(USER)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-  isProMember     Boolean      @default(false)
   credits         Int          @default(0)
 
   // Relations
@@ -88,4 +87,16 @@ model Dashboard {
 
   user           User     @relation(fields: [userId], references: [id])
   @@map("dashboard")
+}
+
+model OTP {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  userId  String @db.ObjectId
+  otpCode String
+
+  expiry     DateTime
+  created_at DateTime @default(now())
+
+  @@unique([userId, otpCode])
+  @@map("otp")
 }
