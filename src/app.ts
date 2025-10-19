@@ -26,7 +26,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use(morgan("dev"));
 
-app.use("api/v1", router);
+app.use("/api/v1", router);
 
 app.use((req: Request, res: Response) => {
   res.status(httpStatus.NOT_FOUND).json({

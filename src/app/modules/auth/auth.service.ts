@@ -204,7 +204,6 @@ class AuthService {
               subject,
               htmlContent
             );
-            console.log(`Welcome email sent to ${userData.email}`);
           } catch (error) {
             console.error('Failed to send welcome email:', error);
           }
