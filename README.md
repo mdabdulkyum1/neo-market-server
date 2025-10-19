@@ -1,225 +1,335 @@
-# Neo Market (Referral & Credit System)
+# FileSure Assignment - Referral & Credit System
 
-This is a full-stack application for a digital product platform called "Neo Market," implementing a referral and credit system. Users can register, log in, share referral links, earn credits on referred users' first purchases, and track their activity on a dashboard. The project demonstrates clean architecture, modern UI, and thoughtful engineering practices.
+A full-stack referral and credit system built with Node.js, Express, TypeScript, and MongoDB using Prisma ORM.
 
-## Table of Contents
-- [Features](#features)
-- [Setup Instructions](#setup-instructions)
-- [Environment Variables](#environment-variables)
-- [API Endpoints](#api-endpoints)
-- [Architecture & Business Logic](#architecture--business-logic)
-- [Technologies Used](#technologies-used)
-- [Deployment](#deployment)
-- [System Design Documentation](#system-design-documentation)
-- [Optional Enhancements](#optional-enhancements)
+## 🚀 Features
 
-## Features
-- Secure user registration, login, and logout with authentication.
-- Unique referral link generation for each user (e.g., `https://neo-market.com/register?r=USER123`).
-- Earn 2 credits each for referrer and referred user on the first purchase.
-- Dashboard to track referred users, converted users, and total credits.
-- Purchase simulation with prevention of double-crediting.
+### Core Functionality
+- **User Authentication**: Secure registration, login, and email verification with OTP
+- **Referral System**: Users can share referral links and earn credits when referrals make purchases
+- **Credit System**: Both referrer and referred user earn 2 credits on first purchase
+- **Purchase Simulation**: Demo purchase functionality for testing the credit system
+- **Dashboard Analytics**: Comprehensive dashboard showing referral statistics and earnings
+- **Email Notifications**: Automated email notifications for referral bonuses and welcome messages
 
-## Setup Instructions
-1. **Clone the Repository:**
+### Business Logic
+- Each user gets a unique referral code upon registration
+- When a user signs up via referral link, the referrer-referred relationship is recorded
+- Credits are awarded only on the **first purchase** by a referred user
+- Both referrer and referred user earn **2 credits each** on conversion
+- Prevention of double-crediting through proper transaction handling
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Node.js** with **Express.js**
+- **TypeScript** for type safety
+- **Prisma ORM** with **MongoDB**
+- **JWT** for authentication
+- **bcrypt** for password hashing
+- **Zod** for validation
+- **Morgan** for logging
+
+### Architecture
+- **Class-based services** for better organization and maintainability
+- **Modular structure** with separate modules for auth, users, referrals, and purchases
+- **RESTful API design** with proper HTTP status codes
+- **Transaction-based operations** for data consistency
+- **Comprehensive error handling** with custom error classes
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── errors/           # Custom error handling
+│   ├── helpers/          # Utility functions
+│   ├── interface/        # TypeScript interfaces
+│   ├── lib/             # Database and external service configurations
+│   ├── middlewares/     # Authentication and validation middlewares
+│   ├── modules/         # Feature modules
+│   │   ├── auth/        # Authentication module
+│   │   ├── user/        # User management module
+│   │   ├── referral/    # Referral system module
+│   │   └── purchase/    # Purchase and credit system module
+│   ├── routes/          # Main route configuration
+│   ├── shared/          # Shared utilities
+│   └── utils/           # Email and notification utilities
+├── config/              # Configuration files
+└── types/               # Global type definitions
+```
+
+## 🗄️ Database Schema
+
+### User Model
+- Basic user information (name, email, password)
+- Unique referral code for sharing
+- Credits balance
+- Email verification status
+
+### Referral Model
+- Referrer-referred relationship tracking
+- Referral status (PENDING/CONVERTED)
+- Conversion timestamp
+- Link to associated purchase
+
+### Purchase Model
+- Purchase details (user, product, amount)
+- First purchase flag for credit eligibility
+- Referral relationship (if applicable)
+
+### Dashboard Model
+- Aggregated statistics for each user
+- Total referred users count
+- Converted users count
+- Total credits earned
+
+### OTP Model
+- Email verification and password reset OTPs
+- Expiration handling
+
+## 🔌 API Endpoints
+
+### Authentication (`/api/auth`)
+- `POST /create-account` - Register new user with optional referral code
+- `POST /email-verify` - Verify email with OTP
+- `POST /login` - User login
+- `POST /admin/login` - Admin login
+- `POST /forgot-password` - Request password reset OTP
+- `POST /reset-password` - Reset password with OTP
+- `POST /change-password` - Change password (authenticated)
+- `POST /resend-otp` - Resend OTP
+
+### Users (`/api/users`)
+- `GET /me` - Get current user profile
+- `PUT /update-profile` - Update user profile
+- `POST /me/uploads-profile-photo` - Upload profile image
+- `GET /dashboard` - Get user dashboard data
+- `GET /referrals/history` - Get referral history
+- `GET /:id` - Get user by ID
+- `GET /all` - Get all users (admin)
+- `PUT /status/:userId` - Update user status (admin)
+- `DELETE /delete/:id` - Delete user (admin)
+
+### Referrals (`/api/referrals`)
+- `GET /stats` - Get referral statistics (authenticated)
+- `GET /validate/:referralCode` - Validate referral code (public)
+- `GET /leaderboard` - Get referral leaderboard (public)
+
+### Purchases (`/api/purchases`)
+- `POST /` - Create purchase (authenticated)
+- `POST /simulate` - Simulate purchase for demo (authenticated)
+- `POST /payment-intent` - Create Stripe payment intent (authenticated)
+- `POST /confirm-payment` - Confirm Stripe payment and process purchase (authenticated)
+- `GET /history` - Get purchase history (authenticated)
+- `GET /:id` - Get purchase by ID (authenticated)
+- `GET /stats/overview` - Get purchase statistics (authenticated)
+- `GET /admin/all` - Get all purchases (admin)
+
+### Email Testing (`/api/email`) - Development Only
+- `POST /test/referral-bonus` - Test referral bonus email (authenticated)
+- `POST /test/welcome` - Test welcome email (authenticated)
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v16 or higher)
+- MongoDB database
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/neo-market.git
-   cd neo-market
+   git clone <repository-url>
+   cd neo-market-server
+   ```
 
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
+3. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Configure your `.env` file:
+   ```env
+   DATABASE_URL="mongodb://localhost:27017/referral-system"
+   JWT_SECRET="your-jwt-secret"
+   JWT_EXPIRES_IN="7d"
+   BCRYPT_SALT_ROUNDS=12
+   FRONTEND_URL="http://localhost:3000"
+   
+   # Email Configuration
+   EMAIL="your-email@gmail.com"
+   EMAIL_PASSWORD="your-app-password"
+   CONTACT_MAIL_ADDRESS="contact@neomarket.com"
+   
+   # Stripe Configuration
+   STRIPE_SECRET_KEY="sk_test_your_stripe_secret_key"
+   STRIPE_PUBLISHABLE_KEY="pk_test_your_stripe_publishable_key"
+   STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret"
+   ```
 
-   Install Dependencies:
+4. **Database Setup**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-Frontend: Navigate to client and run:
-bashnpm install
+5. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
 
-Backend: Navigate to server and run:
-bashnpm install
+The server will start on `http://localhost:5000`
 
+## 🧪 Testing the System
 
-
-Configure Environment Variables: Create .env files in client and server directories using .env.example as a template.
-Set Up Database:
-
-Install a relational database (e.g., PostgreSQL) or use a cloud service.
-Update the database URL in the .env file.
-
-
-Run Migrations (if using Prisma):
-bashnpx prisma migrate dev
-
-Run the Application:
-
-Start the backend server:
-bashnpm start
-
-Start the frontend:
-bashnpm run dev
-
-
-
-Access the App: Open http://localhost:3000 in your browser.
-
-Environment Variables
-Create .env files in both client and server directories based on .env.example. Example:
-
-client/.env:
-textNEXT_PUBLIC_API_URL=http://localhost:5000/api
-
-server/.env:
-textPORT=5000
-DATABASE_URL=postgresql://user:password@localhost:5432/neo-market
-JWT_SECRET=your-secret-key
-
-
-API Endpoints
-
-POST /api/auth/register: Register a new user.
-
-Body: { name, email, password }
-
-
-POST /api/auth/login: Log in a user.
-
-Body: { email, password }
-
-
-GET /api/user/referral: Get the user's referral link.
-POST /api/referral/track: Track referral status.
-
-Body: { referralCode }
-
-
-POST /api/purchase: Simulate a purchase.
-
-Body: { userId, productId }
-
-
-GET /api/dashboard/:userId: Get dashboard metrics (referred users, converted users, credits).
-
-Architecture & Business Logic
-
-Frontend: Built with Next.js, TypeScript, and Tailwind CSS. Uses Zustand for state management and Framer Motion for animations. The UI features a responsive, modern dashboard.
-Backend: Node.js with Express and TypeScript. Implements RESTful APIs with JWT authentication. Manages referral tracking and credit allocation.
-Database: Relational database (e.g., PostgreSQL) with a custom schema designed for users, referrals, purchases, and dashboards.
-Business Logic:
-
-Users receive a unique referral link upon registration.
-When a referred user signs up and makes their first purchase, both earn 2 credits.
-Subsequent purchases do not generate additional credits.
-Dashboard updates reflect real-time user activity.
-
-
-
-Technologies Used
-
-Frontend: Next.js, TypeScript, Tailwind CSS, Zustand, Framer Motion
-Backend: Node.js, Express, TypeScript
-Database: PostgreSQL (or equivalent relational DB)
-ORM: Prisma (for schema management and migrations)
-Authentication: JWT (or Clerk/Supabase Auth)
-
-Deployment
-
-Deployed using Vercel (frontend) and Render (backend). Live demo: https://neo-market.vercel.app
-
-System Design Documentation
-Database Schema (DBML)
-dbml// DBML Schema for Neo Market
-
-Table users {
-  id string [primary key]
-  name varchar
-  email varchar [unique]
-  password varchar
-  referral_code varchar [unique]
-  image varchar
-  is_email_verified boolean [default: false]
-  role varchar [default: 'USER', note: 'ADMIN or USER']
-  is_pro_member boolean [default: false]
-  credits integer [default: 0]
-  created_at timestamp
-  updated_at timestamp
+### 1. User Registration with Referral
+```bash
+# Register first user (no referral)
+POST /api/auth/create-account
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123"
 }
 
-Table referrals {
-  id string [primary key]
-  referrer_id string [not null]
-  referred_id string [not null]
-  referral_code varchar
-  status varchar [default: 'pending', note: 'pending or converted']
-  converted_at timestamp
-  purchase_id string [unique]
-  created_at timestamp
+# Register second user with referral
+POST /api/auth/create-account
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "password": "password123",
+  "referralCode": "REF123ABC456" // John's referral code
+}
+```
+
+### 2. Make Purchase (Simulate)
+```bash
+# First purchase by Jane (triggers referral credits)
+POST /api/purchases/simulate
+{
+  "productName": "Digital Product",
+  "amount": 29.99
+}
+```
+
+### 3. Check Dashboard
+```bash
+# Get John's dashboard to see referral earnings
+GET /api/users/dashboard
+```
+
+### 4. Test Stripe Payments
+```bash
+# Create payment intent
+POST /api/purchases/payment-intent
+{
+  "productId": "PROD_123",
+  "amount": 29.99,
+  "currency": "usd"
 }
 
-Table purchases {
-  id string [primary key]
-  user_id string [not null]
-  product_id varchar
-  amount float
-  is_first_purchase boolean [default: true]
-  purchase_date timestamp
-  referral_id string [unique]
+# Confirm payment (after frontend processes payment)
+POST /api/purchases/confirm-payment
+{
+  "paymentIntentId": "pi_1234567890"
+}
+```
+
+### 5. Test Email Notifications
+```bash
+# Test referral bonus email
+POST /api/email/test/referral-bonus
+{
+  "email": "test@example.com",
+  "name": "Test User",
+  "credits": 2
 }
 
-Table dashboards {
-  id string [primary key]
-  user_id string [unique, not null]
-  referred_users integer [default: 0]
-  converted_users integer [default: 0]
-  total_credits integer [default: 0]
+# Test welcome email
+POST /api/email/test/welcome
+{
+  "email": "test@example.com",
+  "name": "Test User"
 }
+```
 
-// Foreign key relationships
-Ref: users.id > referrals.referrer_id // one-to-many (a user can give many referrals)
-Ref: users.id > referrals.referred_id // one-to-many (a user can be referred by many)
-Ref: referrals.purchase_id > purchases.id // one-to-one (a referral may have one purchase)
-Ref: users.id > purchases.user_id // one-to-many (a user can have many purchases)
-Ref: purchases.referral_id > referrals.id // one-to-one (a purchase may be linked to one referral)
-Ref: users.id > dashboards.user_id // one-to-one (a user has one dashboard)
-UML Class Diagram
-mermaidclassDiagram
-    class User {
-        -id: string
-        -name: varchar
-        -email: varchar
-        -password: varchar
-        -referral_code: varchar
-        -credits: integer
-        +register(): boolean
-        +generateReferralLink(): string
-        +earnCredits(amount: integer): void
-    }
-    class Referral {
-        -id: string
-        -referrer_id: string
-        -referred_id: string
-        -status: varchar
-        -purchase_id: string
-        +trackStatus(): string
-        +convertReferral(): void
-    }
-    class Purchase {
-        -id: string
-        -user_id: string
-        -product_id: varchar
-        -amount: float
-        -isFirstPurchase: boolean
-        +processPurchase(): boolean
-    }
-    class Dashboard {
-        -id: string
-        -user_id: string
-        -referred_users: integer
-        -converted_users: integer
-        -total_credits: integer
-        +displayStats(): void
-    }
+## 🔒 Security Features
 
-    User "1" -- "*" Referral : has many
-    Referral "1" -- "1" User : referrer
-    Referral "1" -- "1" User : referred
-    User "1" -- "*" Purchase : has many
-    Referral "0..1" -- "1" Purchase : has
-    User "1" -- "1" Dashboard : has
+- **Password Hashing**: bcrypt with configurable salt rounds
+- **JWT Authentication**: Secure token-based authentication
+- **Input Validation**: Zod schema validation for all inputs
+- **SQL Injection Protection**: Prisma ORM with parameterized queries
+- **Rate Limiting**: Built-in Express rate limiting
+- **CORS Configuration**: Proper cross-origin resource sharing setup
+
+## 📊 Business Logic Implementation
+
+### Referral Flow
+1. User A registers and receives referral code
+2. User A shares referral link: `https://yourapp.com/register?r=REF123ABC456`
+3. User B registers using User A's referral code
+4. User B makes their first purchase
+5. Both User A and User B receive 2 credits each
+6. User A's dashboard shows increased referral count and earnings
+
+### Email Notification System
+1. **Welcome Email**: Sent when user completes email verification
+2. **Referral Bonus Email**: Sent to both referrer and referred user when credits are awarded
+3. **Signup Bonus Email**: Sent to users who make their first purchase without a referral
+4. **Email Templates**: Beautiful, responsive HTML templates with Neo Market branding
+
+### Credit System
+- Credits are awarded only on **first purchase** by referred users
+- Both referrer and referred user earn **2 credits each**
+- No double-crediting through transaction-based operations
+- Credits are tracked in both user records and dashboard aggregates
+
+## 🎯 Assignment Requirements Compliance
+
+✅ **User & Authentication**: Secure registration, login, logout with JWT
+✅ **Referral Management**: Unique referral codes, relationship tracking
+✅ **Purchases**: Purchase simulation with credit rewards
+✅ **User Dashboard**: Complete analytics and referral tracking
+✅ **Data Integrity**: Transaction-based operations prevent double-crediting
+✅ **Class-based Services**: All services use class architecture
+✅ **TypeScript**: Full type safety throughout the application
+✅ **RESTful APIs**: Well-structured API endpoints
+✅ **Error Handling**: Comprehensive error management
+✅ **Security**: Hashed passwords, secure tokens, input validation
+
+## 📝 API Documentation
+
+For detailed API documentation, you can use tools like Postman or create a Swagger/OpenAPI specification. All endpoints follow RESTful conventions with proper HTTP status codes and response formats.
+
+## 🔧 Development
+
+### Available Scripts
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run prisma:generate` - Generate Prisma client
+- `npm run lint` - Run ESLint
+
+### Database Commands
+- `npx prisma studio` - Open Prisma Studio for database management
+- `npx prisma db push` - Push schema changes to database
+- `npx prisma generate` - Generate Prisma client
+
+## 📈 Future Enhancements
+
+- **Frontend Integration**: Next.js frontend with Tailwind CSS
+- **Real Payment Integration**: Stripe/PayPal integration
+- **Advanced Analytics**: More detailed reporting and insights
+- **Email Notifications**: Automated referral and credit notifications
+- **Mobile App**: React Native mobile application
+- **Admin Panel**: Comprehensive admin dashboard
+
+
+**Built with ❤️ for FileSure Assignment**
