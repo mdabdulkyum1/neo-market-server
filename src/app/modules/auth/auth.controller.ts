@@ -6,10 +6,6 @@ import catchAsync from "../../helpers/catchAsync";
 
 const createAccount = catchAsync(async (req, res) => {
 
-  const host = req.header('host') || '';
-
-  console.log("Host:", host); // Log the host for debugging
-
   const result = await authService.registerUser(req.body);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -56,6 +52,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const adminLoginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.adminLogin(req.body);
   sendResponse(res, {
@@ -64,7 +61,6 @@ const adminLoginUser = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
 
 const forgotPassword = catchAsync(async (req: Request, res: Response) => {
   const result = await authService.forgotPassword(req.body);
@@ -75,26 +71,6 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
-// const verifyOtp = catchAsync(async (req, res) => {
-//   const result: any = await AuthServices.verifyOtp(req.body);
-//   console.log(result.statusCode);
-//   if (result.statusCode) {
-//     const { statusCode, message, ...data } = result
-//     return sendResponse(res, {
-//       statusCode,
-//       message,
-//       data: data,
-//     });
-//   }
-
-
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     message: 'OTP verified successfully please reset your password',
-//     data: result,
-//   });
-// });
 
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id
@@ -128,7 +104,7 @@ const changePassword = catchAsync(async (req, res) => {
   });
 });
 const resendOtp = catchAsync(async (req, res) => {
-  // Accept either email or userId for resending OTP
+  
   const payload = {
     email: req.body.email,
     userId: req.body.userId

@@ -2,6 +2,7 @@ import cors from "cors";
 import express, { Application, Request, Response, NextFunction } from "express";
 import httpStatus from "http-status";
 import morgan from "morgan";
+import globalErrorHandler from "./app/errors/globalErrorHandler";
 import router from "./app/routes";
 
 
@@ -27,6 +28,8 @@ app.get("/", (req: Request, res: Response) => {
 app.use(morgan("dev"));
 
 app.use("/api/v1", router);
+
+app.use(globalErrorHandler);
 
 app.use((req: Request, res: Response) => {
   res.status(httpStatus.NOT_FOUND).json({

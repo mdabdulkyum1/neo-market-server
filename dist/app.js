@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
     res.send({ Message: "Neo Market server is running. . ." });
 });
 app.use((0, morgan_1.default)("dev"));
-app.use("api/v1", routes_1.default);
+app.use("/api/v1", routes_1.default);
 app.use((req, res) => {
     res.status(http_status_1.default.NOT_FOUND).json({
         success: false,

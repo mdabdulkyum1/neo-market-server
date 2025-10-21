@@ -2,7 +2,6 @@ import { Prisma } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status";
 import { ZodError } from "zod";
-// import parsePrismaValidationError from "../../errors/parsePrismaValidationError";
 import config from "../../config";
 
 import handleClientError from "./handleClientError";

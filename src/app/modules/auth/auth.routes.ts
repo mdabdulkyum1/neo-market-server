@@ -27,6 +27,8 @@ router.post(
   validateRequest(authValidation.loginUser),
   AuthControllers.loginUser
 );
+
+// ( Optional ) 
 router.post(
   "/admin/login",
   validateRequest(authValidation.loginUser),
@@ -39,11 +41,6 @@ router.post(
   AuthControllers.forgotPassword
 );
 
-// router.post(
-//   "/verify-reset-password-otp",
-//   validateRequest(authValidation.verifyOtp),
-//   AuthControllers.verifyOtp
-// );
 router.post(
   "/reset-password",
   validateRequest(authValidation.resetPassword),

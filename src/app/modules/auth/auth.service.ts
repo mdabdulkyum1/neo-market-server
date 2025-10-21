@@ -212,7 +212,7 @@ class AuthService {
 
       return {
         statusCode: httpStatus.OK,
-        message: type === 'register' ? "Email Verification successful" : "OTP verified successfully",
+        message: "OTP verified successfully",
         id: userData.id,
         name: userData.name,
         email: userData.email,
