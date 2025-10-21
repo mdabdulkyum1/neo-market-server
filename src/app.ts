@@ -21,6 +21,10 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/api/v1/health', (req: Request, res: Response) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
 app.get("/", (req: Request, res: Response) => {
   res.send({ Message: "Neo Market server is running. . ." });
 });
