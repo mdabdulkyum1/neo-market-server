@@ -93,3 +93,4 @@ model OTP {
   @@unique([userId, otpCode])
   @@map("otp")
 }
+
