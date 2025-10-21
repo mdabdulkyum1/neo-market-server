@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,6 +5,16 @@ generator client {
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ReferralStatus {
+  PENDING
+  CONVERTED
 }
 
 model User {
@@ -30,52 +39,40 @@ model User {
   @@map("users")
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
 model Referral {
-  id           String    @id @default(auto()) @map("_id") @db.ObjectId
-  referrerId   String    @db.ObjectId
-  referredId   String    @db.ObjectId
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  referrerId   String          @db.ObjectId
+  referredId   String          @db.ObjectId
   referralCode String
-  status       ReferralStatus    @default(PENDING)
+  status       ReferralStatus  @default(PENDING)
   convertedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  purchaseId   String?   @unique @db.ObjectId  
+  createdAt    DateTime        @default(now())
+  purchaseId   String?         @unique @db.ObjectId  // ✅ one-to-one
 
   // Relations
-  referrer     User      @relation("ReferralsGiven", fields: [referrerId], references: [id])
-  referred     User      @relation("ReferralsGotten", fields: [referredId], references: [id])
-  purchase     Purchase? @relation("ReferralPurchase", fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  referrer     User            @relation("ReferralsGiven", fields: [referrerId], references: [id])
+  referred     User            @relation("ReferralsGotten", fields: [referredId], references: [id])
+  purchase     Purchase?       @relation("ReferralPurchase", fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([referrerId, referredId]) 
-
-  @@map("referral")
+  @@unique([referrerId, referredId])
+  @@map("referrals")
 }
-
-enum ReferralStatus {
-  PENDING
-  CONVERTED
-}
-
 
 model Purchase {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String    @db.ObjectId
-  productId     String
-  amount        Float
-  isFirstPurchase Boolean @default(true)
-  purchaseDate  DateTime  @default(now())
-  referralId    String?   @unique @db.ObjectId  
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @db.ObjectId
+  productId       String
+  amount          Float
+  isFirstPurchase Boolean   @default(true)
+  purchaseDate    DateTime  @default(now())
+  referralId      String?   @db.ObjectId
 
   // Relations
-  user          User      @relation(fields: [userId], references: [id])
-  referral      Referral? @relation("ReferralPurchase") 
+  user            User      @relation(fields: [userId], references: [id])
+  referral        Referral? @relation("ReferralPurchase")
 
-  @@index([userId]) 
-  @@map("purchase")
+  @@index([userId])
+  @@map("purchases")
 }
 
 model Dashboard {
@@ -90,12 +87,11 @@ model Dashboard {
 }
 
 model OTP {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
-  userId  String @db.ObjectId
-  otpCode String
-
-  expiry     DateTime
-  created_at DateTime @default(now())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  otpCode   String
+  expiry    DateTime
+  createdAt DateTime @default(now())
 
   @@unique([userId, otpCode])
   @@map("otp")
