@@ -1,3 +1,70 @@
+import axios from "axios";
+import config from "../../config";
+
+const sentEmailUtility = async (
+  emailTo: string,
+  EmailSubject: string,
+  EmailHTML?: string,
+  EmailText?: string
+) => {
+  try {
+    if (!EmailHTML && !EmailText) {
+      EmailText = "This is a default email content.";
+    }
+
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "Md Abdul Kyum",
+          email: config.emailSender.email,
+        },
+        to: [{ email: emailTo }],
+        subject: EmailSubject,
+        htmlContent: EmailHTML || EmailText,
+        textContent: EmailText || EmailHTML,
+      },
+      {
+        headers: {
+          "api-key": config.emailSender.app_pass,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "💥 Brevo Email API Error:",
+      error.response?.data || error.message
+    );
+    throw new Error("Failed to send email using Brevo API");
+  }
+};
+
+export default sentEmailUtility;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import config from "../../config";
 
 
@@ -42,48 +109,3 @@
 
 
 
-
-
-
-import axios from "axios";
-import config from "../../config";
-
-const sentEmailUtility = async (
-  emailTo: string,
-  EmailSubject: string,
-  EmailHTML?: string,
-  EmailText?: string
-) => {
-  try {
-   
-    const response = await axios.post(
-      "https://api.brevo.com/v3/smtp/email",
-      {
-        sender: {
-          name: "Md Abdul Kyum",
-          email: config.emailSender.email, 
-        },
-        to: [{ email: emailTo }],
-        subject: EmailSubject,
-        htmlContent: EmailHTML || "",
-        textContent: EmailText || "",
-      },
-      {
-        headers: {
-          "api-key": config.emailSender.app_pass, 
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    return response.data;
-  } catch (error: any) {
-    console.error(
-      "💥 Brevo Email API Error:",
-      error.response?.data || error.message
-    );
-    throw new Error("Failed to send email using Brevo API");
-  }
-};
-
-export default sentEmailUtility;
