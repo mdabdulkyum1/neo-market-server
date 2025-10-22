@@ -135,7 +135,7 @@ class AuthService {
     type: 'register'
   };
   }
-
+  
   // Verify email with OTP
   async verifyEmail(payload: IOtpVerification) {
     const { userId, otpCode, type } = payload;
