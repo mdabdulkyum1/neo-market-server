@@ -14,7 +14,7 @@ let sentEmailUtility = async (
     smtpTransporter({
       host: "smtp-relay.brevo.com",
       secure: true,
-      port: 587,
+      port: 465,
       auth: {
         user: config.emailSender.email,
         pass: config.emailSender.app_pass,
