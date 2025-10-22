@@ -46,11 +46,10 @@ class AuthService {
 
   // Register new user with referral system
   async registerUser(payload: IRegisterUser) {
-    const { name, email, password, referralCode } = payload;
+  const { name, email, password, referralCode } = payload;
 
-    // Check if user already exists
   const existingUser = await prisma.user.findUnique({
-      where: { email },
+    where: { email },
   });
 
   if (existingUser) {
@@ -60,44 +59,50 @@ class AuthService {
     );
   }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Generate unique referral code for new user
-    const userReferralCode = this.generateReferralCode();
+  const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user with referral system
-    const user = await prisma.$transaction(async (tx) => {
-      // Create the user
-      const newUser = await tx.user.create({
-        data: {
-          name,
-          email: email.trim(),
-    password: hashedPassword,
-          referralCode: userReferralCode,
-          role: Role.USER,
-    isEmailVerified: false,
-          credits: 0,
-        },
+  const userReferralCode = this.generateReferralCode();
+
+  const user = await prisma.$transaction(async (tx) => {
+
+    const newUser = await tx.user.create({
+      data: {
+        name,
+        email: email.trim(),
+        password: hashedPassword,
+        referralCode: userReferralCode,
+        role: Role.USER,
+        isEmailVerified: false,
+        credits: 0,
+      },
+    });
+
+    await tx.dashboard.create({
+      data: {
+        userId: newUser.id,
+        referredUsers: 0,
+        convertedUsers: 0,
+        totalCredits: 0,
+      },
+    });
+
+    if (referralCode) {
+      const referrer = await tx.user.findUnique({
+        where: { referralCode },
       });
 
-      // Create dashboard entry for the user
-      await tx.dashboard.create({
-        data: {
-          userId: newUser.id,
-          referredUsers: 0,
-          convertedUsers: 0,
-          totalCredits: 0,
-        },
-      });
-
-      // If user came through referral link, create referral record
-      if (referralCode) {
-        const referrer = await tx.user.findUnique({
-          where: { referralCode },
+      if (referrer && referrer.id !== newUser.id) {
+        const existingReferral = await tx.referral.findUnique({
+          where: {
+            referrerId_referredId: {
+              referrerId: referrer.id,
+              referredId: newUser.id,
+            },
+          },
         });
 
-        if (referrer) {
+        if (!existingReferral) {
           await tx.referral.create({
             data: {
               referrerId: referrer.id,
@@ -107,34 +112,35 @@ class AuthService {
             },
           });
 
-          // Update referrer's dashboard
           await tx.dashboard.update({
             where: { userId: referrer.id },
             data: {
-              referredUsers: {
-                increment: 1,
-              },
+              referredUsers: { increment: 1 },
             },
           });
         }
       }
+    }
 
-      return newUser;
+    return newUser;
   });
-  
-  // Send OTP for email verification
-    OTPFn(email, user.id, "email Verification", emailTemplate);
 
-    return {
+  try {
+    await OTPFn(email, user.id, "email Verification", emailTemplate);
+  } catch (error) {
+    console.error("OTP sending failed:", error);
+  }
+
+  return {
     id: user.id,
     name: user.name,
     email: user.email,
-      referralCode: user.referralCode,
+    referralCode: user.referralCode,
     otpSent: true,
     message: "OTP sent successfully to your email",
     type: 'register'
   };
-  }
+}
   
   // Verify email with OTP
   async verifyEmail(payload: IOtpVerification) {

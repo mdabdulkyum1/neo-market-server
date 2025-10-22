@@ -21,7 +21,7 @@ model User {
   id              String       @id @default(auto()) @map("_id") @db.ObjectId
   name            String?
   email           String       @unique
-  password        String?      
+  password        String?
   referralCode    String       @unique
   image           String?
   isEmailVerified Boolean      @default(false)
@@ -46,11 +46,11 @@ model Referral {
   status       ReferralStatus  @default(PENDING)
   convertedAt  DateTime?
   createdAt    DateTime        @default(now())
-  purchaseId   String?         @unique @db.ObjectId 
+  purchaseId   String?         @unique @db.ObjectId
 
   referrer     User            @relation("ReferralsGiven", fields: [referrerId], references: [id])
   referred     User            @relation("ReferralsGotten", fields: [referredId], references: [id])
-  purchase     Purchase?       @relation("ReferralPurchase", fields: [purchaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchase     Purchase?       @relation("ReferralPurchase", fields: [purchaseId], references: [id])
 
   @@unique([referrerId, referredId])
   @@map("referrals")
@@ -93,4 +93,3 @@ model OTP {
   @@unique([userId, otpCode])
   @@map("otp")
 }
-
