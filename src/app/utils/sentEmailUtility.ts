@@ -12,16 +12,16 @@ let sentEmailUtility = async (
 ) => {
   let transporter = nodemailer.createTransport(
     smtpTransporter({
-      host: "smtp.gmail.com",
+      host: "smtp-relay.brevo.com",
       secure: true,
-      port: 465,
+      port: 587,
       auth: {
         user: config.emailSender.email,
         pass: config.emailSender.app_pass,
 
       },
       tls: {
-        rejectUnauthorized: false, // OPTIONAL: Bypass SSL issues (only if necessary)
+        rejectUnauthorized: false, 
       },
     })
   );
