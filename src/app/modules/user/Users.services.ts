@@ -4,6 +4,7 @@ import { Role } from '@prisma/client';
 import { IPaginationOptions } from '../../interface/pagination.type';
 import { paginationHelper } from '../../helpers/paginationHelper';
 import ApiError from '../../errors/ApiError';
+import { ValidationUtils } from '../../utils/validation';
 
 class UserService {
   // Get user profile
@@ -54,7 +55,13 @@ class UserService {
 
   // Get all users with pagination
   async getAllUsers(options: IPaginationOptions) {
-    const { page, limit, skip } = paginationHelper.calculatePagination(options);
+    // Validate pagination parameters
+    const validatedPagination = ValidationUtils.validatePagination(options.page, options.limit);
+    const { page, limit, skip } = paginationHelper.calculatePagination({
+      ...options,
+      page: validatedPagination.page,
+      limit: validatedPagination.limit,
+    });
 
     const users = await prisma.user.findMany({
       where: {

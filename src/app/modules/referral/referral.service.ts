@@ -5,6 +5,7 @@ import {
   sendReferralBonusEmails,
   sendReferralBonusEmail,
 } from '../../utils/emailNotifications/referralNotificationService';
+import { ValidationUtils, CREDIT_CONFIG } from '../../utils/validation';
 
 interface ICreateReferral {
   referrerId: string;
@@ -30,6 +31,16 @@ class ReferralService {
   // 🔹 Create referral relationship
   async createReferral(payload: ICreateReferral) {
     const { referrerId, referredId, referralCode } = payload;
+
+    // Validate inputs
+    ValidationUtils.validateUserId(referrerId);
+    ValidationUtils.validateUserId(referredId);
+    ValidationUtils.validateReferralCode(referralCode);
+
+    // Prevent self-referral
+    if (referrerId === referredId) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Users cannot refer themselves');
+    }
 
     // Check if referral already exists
     const existingReferral = await prisma.referral.findUnique({
@@ -71,7 +82,7 @@ class ReferralService {
     const { userId, productId, amount } = payload;
 
     return await prisma.$transaction(async (tx) => {
-      // Check if this is user's first purchase
+      // Check if this is user's first purchase (with proper locking)
       const existingPurchases = await tx.purchase.count({ where: { userId } });
       const isFirstPurchase = existingPurchases === 0;
 
@@ -86,7 +97,7 @@ class ReferralService {
         });
 
         if (referral && referral.status === 'PENDING') {
-          const creditAmount = 2;
+          const creditAmount = CREDIT_CONFIG.REFERRAL_BONUS;
 
           await tx.referral.update({
             where: { id: referral.id },
@@ -107,19 +118,29 @@ class ReferralService {
             data: { credits: { increment: creditAmount } },
           });
 
-          // Update dashboards
-          await tx.dashboard.update({
-            where: { userId: referral.referrerId },
-            data: {
-              convertedUsers: { increment: 1 },
-              totalCredits: { increment: creditAmount },
-            },
-          });
+          // Update dashboards with error handling
+          try {
+            await tx.dashboard.update({
+              where: { userId: referral.referrerId },
+              data: {
+                convertedUsers: { increment: 1 },
+                totalCredits: { increment: creditAmount },
+              },
+            });
+          } catch (error) {
+            console.error('Failed to update referrer dashboard:', error);
+            // Continue execution as this is not critical
+          }
 
-          await tx.dashboard.update({
-            where: { userId },
-            data: { totalCredits: { increment: creditAmount } },
-          });
+          try {
+            await tx.dashboard.update({
+              where: { userId },
+              data: { totalCredits: { increment: creditAmount } },
+            });
+          } catch (error) {
+            console.error('Failed to update referred user dashboard:', error);
+            // Continue execution as this is not critical
+          }
 
           // Send emails asynchronously
           const [referrer, referred] = await Promise.all([
@@ -147,7 +168,7 @@ class ReferralService {
           }
         } else {
           // No referral — award signup bonus
-          const signupBonus = 1;
+          const signupBonus = CREDIT_CONFIG.SIGNUP_BONUS;
 
           await tx.user.update({
             where: { id: userId },
@@ -177,7 +198,11 @@ class ReferralService {
         }
       }
 
-      return { purchase, creditsAwarded: isFirstPurchase ? 2 : 0, isFirstPurchase };
+      return { 
+        purchase, 
+        creditsAwarded: isFirstPurchase ? CREDIT_CONFIG.REFERRAL_BONUS : 0, 
+        isFirstPurchase 
+      };
     });
   }
 

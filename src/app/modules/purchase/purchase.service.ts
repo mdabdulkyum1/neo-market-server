@@ -3,6 +3,7 @@ import prisma from '../../lib/prisma';
 import ApiError from '../../errors/ApiError';
 import { referralService } from '../referral/referral.service';
 import stripe from '../../lib/stripe';
+import { ValidationUtils, CREDIT_CONFIG } from '../../utils/validation';
 
 interface ICreatePurchase {
   userId: string;
@@ -29,6 +30,11 @@ class PurchaseService {
   async createPurchase(payload: ICreatePurchase) {
     const { userId, productId, amount } = payload;
 
+    // Validate inputs
+    ValidationUtils.validateUserId(userId);
+    ValidationUtils.validateProductId(productId);
+    ValidationUtils.validateAmount(amount);
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
@@ -47,12 +53,16 @@ class PurchaseService {
   // 🔹 Get purchase history
   async getPurchaseHistory(payload: IPurchaseHistory) {
     const { userId, page = 1, limit = 10 } = payload;
-    const skip = (page - 1) * limit;
+    
+    // Validate inputs
+    ValidationUtils.validateUserId(userId);
+    const validatedPagination = ValidationUtils.validatePagination(page, limit);
+    const skip = (validatedPagination.page - 1) * validatedPagination.limit;
 
     const purchases = await prisma.purchase.findMany({
       where: { userId },
       skip,
-      take: limit,
+      take: validatedPagination.limit,
       orderBy: { purchaseDate: 'desc' },
       include: {
         referral: {
@@ -69,7 +79,12 @@ class PurchaseService {
 
     return {
       purchases,
-      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      pagination: { 
+        total, 
+        page: validatedPagination.page, 
+        limit: validatedPagination.limit, 
+        totalPages: Math.ceil(total / validatedPagination.limit) 
+      },
     };
   }
 
@@ -147,7 +162,7 @@ class PurchaseService {
 
   // 🔹 Simulate purchase for demo/testing
   async simulatePurchase(userId: string, productName: string, amount: number) {
-    const productId = `PROD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const productId = `PROD_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     return await this.createPurchase({ userId, productId, amount });
   }
 
