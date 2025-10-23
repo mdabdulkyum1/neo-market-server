@@ -105,13 +105,13 @@ const getUserDashboard = catchAsync(async (req: Request, res: Response) => {
   if (!userId) {
     throw new Error('User not authenticated');
   }
-  const data = await userService.getUserDashboard(userId);
+  // const data = await userService.getUserDashboard(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Dashboard data fetched successfully!',
-    data: data,
+    data: "data",
   });
 });
 
