@@ -240,50 +240,52 @@ class UserService {
   }
 
   // Get referral history
-  async getReferralHistory(userId: string, options: IPaginationOptions) {
-    const { page, limit, skip } = paginationHelper.calculatePagination(options);
+async getReferralHistory(userId: string, options: IPaginationOptions) {
+  const { page, limit, skip } = paginationHelper.calculatePagination(options);
 
-    const referrals = await prisma.referral.findMany({
-      where: { referrerId: userId },
-      include: {
-        referred: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            createdAt: true,
-          },
-        },
-        purchase: {
-          select: {
-            id: true,
-            amount: true,
-            purchaseDate: true,
-          },
+  const referrals = await prisma.referral.findMany({
+    where: { referrerId: userId },
+    include: {
+      referred: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          createdAt: true,
         },
       },
-      skip,
-      take: limit,
-      orderBy: {
-        createdAt: 'desc',
+      purchases: {
+        select: {
+          id: true,
+          amount: true,
+          purchaseDate: true,
+          isFirstPurchase: true,
+        },
       },
-    });
+    },
+    skip,
+    take: limit,
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
 
-    const total = await prisma.referral.count({
-      where: { referrerId: userId },
-    });
+  const total = await prisma.referral.count({
+    where: { referrerId: userId },
+  });
 
-    return {
-      meta: {
-        total,
-        page,
-        totalPage: Math.ceil(total / limit),
-        limit,
-      },
-      data: referrals,
-    };
-  }
+  return {
+    meta: {
+      total,
+      page,
+      totalPage: Math.ceil(total / limit),
+      limit,
+    },
+    data: referrals,
+  };
+}
+
 
   // Delete user (admin only)
   async deleteUser(userId: string) {

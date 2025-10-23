@@ -16,7 +16,7 @@ interface IProcessPurchase {
 }
 
 class ReferralService {
-  // Create referral relationship
+  // 🔹 Create referral relationship
   async createReferral(payload: ICreateReferral) {
     const { referrerId, referredId, referralCode } = payload;
 
@@ -48,16 +48,14 @@ class ReferralService {
     await prisma.dashboard.update({
       where: { userId: referrerId },
       data: {
-        referredUsers: {
-          increment: 1,
-        },
+        referredUsers: { increment: 1 },
       },
     });
 
     return referral;
   }
 
-  // Process purchase and award credits
+  // 🔹 Process purchase and award credits
   async processPurchase(payload: IProcessPurchase) {
     const { userId, productId, amount } = payload;
 
@@ -79,70 +77,55 @@ class ReferralService {
         },
       });
 
-      // If this is the first purchase, check for referral credits
+      // If this is the first purchase, check for referral
       if (isFirstPurchase) {
         const referral = await tx.referral.findFirst({
           where: { referredId: userId },
         });
 
         if (referral && referral.status === 'PENDING') {
-          // Award credits to both referrer and referred user
           const creditAmount = 2;
 
-          // Update referral status
+          // Update referral status + link the purchase via relation
           await tx.referral.update({
             where: { id: referral.id },
             data: {
               status: 'CONVERTED',
               convertedAt: new Date(),
-              purchaseId: purchase.id,
+              purchases: {
+                connect: { id: purchase.id },
+              },
             },
           });
 
-          // Award credits to referrer
+          // Award credits
           await tx.user.update({
             where: { id: referral.referrerId },
-            data: {
-              credits: {
-                increment: creditAmount,
-              },
-            },
+            data: { credits: { increment: creditAmount } },
           });
 
-          // Award credits to referred user
           await tx.user.update({
             where: { id: userId },
-            data: {
-              credits: {
-                increment: creditAmount,
-              },
-            },
+            data: { credits: { increment: creditAmount } },
           });
 
-          // Update referrer's dashboard
+          // Update dashboards
           await tx.dashboard.update({
             where: { userId: referral.referrerId },
             data: {
-              convertedUsers: {
-                increment: 1,
-              },
-              totalCredits: {
-                increment: creditAmount,
-              },
+              convertedUsers: { increment: 1 },
+              totalCredits: { increment: creditAmount },
             },
           });
 
-          // Update referred user's dashboard
           await tx.dashboard.update({
-            where: { userId: userId },
+            where: { userId },
             data: {
-              totalCredits: {
-                increment: creditAmount,
-              },
+              totalCredits: { increment: creditAmount },
             },
           });
 
-          // Get user details for email notification
+          // Send emails asynchronously
           const [referrer, referred] = await Promise.all([
             tx.user.findUnique({
               where: { id: referral.referrerId },
@@ -154,7 +137,6 @@ class ReferralService {
             }),
           ]);
 
-          // Send email notifications (don't wait for completion to avoid blocking transaction)
           if (referrer && referred) {
             setImmediate(() => {
               sendReferralBonusEmails(
@@ -164,40 +146,28 @@ class ReferralService {
                 referred.email,
                 referred.name || 'User',
                 creditAmount
-              ).catch(error => {
-                console.error('Failed to send referral bonus emails:', error);
-              });
+              ).catch((err) => console.error('Email error:', err));
             });
           }
         } else {
-          // User has no referral, award signup bonus (optional)
+          // No referral — award signup bonus
           const signupBonus = 1;
-          
+
           await tx.user.update({
             where: { id: userId },
-            data: {
-              credits: {
-                increment: signupBonus,
-              },
-            },
+            data: { credits: { increment: signupBonus } },
           });
 
           await tx.dashboard.update({
-            where: { userId: userId },
-            data: {
-              totalCredits: {
-                increment: signupBonus,
-              },
-            },
+            where: { userId },
+            data: { totalCredits: { increment: signupBonus } },
           });
 
-          // Get user details for signup bonus email notification
           const user = await tx.user.findUnique({
             where: { id: userId },
             select: { email: true, name: true, referralCode: true },
           });
 
-          // Send signup bonus email notification
           if (user) {
             setImmediate(() => {
               sendReferralBonusEmail({
@@ -205,9 +175,7 @@ class ReferralService {
                 userName: user.name || 'User',
                 creditsEarned: signupBonus,
                 referralCode: user.referralCode,
-              }).catch(error => {
-                console.error('Failed to send signup bonus email:', error);
-              });
+              }).catch((err) => console.error('Email error:', err));
             });
           }
         }
@@ -221,7 +189,7 @@ class ReferralService {
     });
   }
 
-  // Get referral statistics
+  // 🔹 Get referral stats
   async getReferralStats(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -238,7 +206,7 @@ class ReferralService {
                 createdAt: true,
               },
             },
-            purchase: {
+            purchases: {
               select: {
                 id: true,
                 amount: true,
@@ -256,15 +224,14 @@ class ReferralService {
 
     const totalReferred = user.referralsGiven.length;
     const convertedReferrals = user.referralsGiven.filter(
-      r => r.status === 'CONVERTED'
+      (r) => r.status === 'CONVERTED'
     ).length;
-    const pendingReferrals = user.referralsGiven.filter(
-      r => r.status === 'PENDING'
-    ).length;
+    const pendingReferrals = totalReferred - convertedReferrals;
 
-    const totalCreditsEarned = user.referralsGiven.reduce((total, referral) => {
-      return total + (referral.status === 'CONVERTED' ? 2 : 0);
-    }, 0);
+    const totalCreditsEarned = user.referralsGiven.reduce(
+      (sum, r) => sum + (r.status === 'CONVERTED' ? 2 : 0),
+      0
+    );
 
     return {
       user: {
@@ -279,13 +246,16 @@ class ReferralService {
         convertedUsers: convertedReferrals,
         pendingUsers: pendingReferrals,
         totalCreditsEarned,
-        conversionRate: totalReferred > 0 ? (convertedReferrals / totalReferred) * 100 : 0,
+        conversionRate:
+          totalReferred > 0
+            ? (convertedReferrals / totalReferred) * 100
+            : 0,
       },
       referralLink: `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`,
     };
   }
 
-  // Validate referral code
+  // 🔹 Validate referral code
   async validateReferralCode(referralCode: string) {
     const user = await prisma.user.findUnique({
       where: { referralCode },
@@ -305,7 +275,7 @@ class ReferralService {
     return user;
   }
 
-  // Get referral leaderboard
+  // 🔹 Get leaderboard
   async getReferralLeaderboard(limit: number = 10) {
     const topReferrers = await prisma.dashboard.findMany({
       orderBy: [
@@ -334,9 +304,10 @@ class ReferralService {
         totalReferredUsers: dashboard.referredUsers,
         convertedUsers: dashboard.convertedUsers,
         totalCreditsEarned: dashboard.totalCredits,
-        conversionRate: dashboard.referredUsers > 0 
-          ? (dashboard.convertedUsers / dashboard.referredUsers) * 100 
-          : 0,
+        conversionRate:
+          dashboard.referredUsers > 0
+            ? (dashboard.convertedUsers / dashboard.referredUsers) * 100
+            : 0,
       },
     }));
   }

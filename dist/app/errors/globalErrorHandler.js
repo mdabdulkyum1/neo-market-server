@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 const zod_1 = require("zod");
-// import parsePrismaValidationError from "../../errors/parsePrismaValidationError";
 const config_1 = __importDefault(require("../../config"));
 const handleClientError_1 = __importDefault(require("./handleClientError"));
 const handleZodError_1 = __importDefault(require("./handleZodError"));

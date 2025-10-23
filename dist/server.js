@@ -4,10 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
+const keepAlive_1 = require("./services/keepAlive");
 const port = process.env.PORT || 5000;
 async function main() {
     const server = app_1.default.listen(port, () => {
         console.log("🚀 Neo Server is running on port", port);
+        (0, keepAlive_1.startKeepAlive)();
     });
     // Graceful shutdown
     const exitHandler = () => {
