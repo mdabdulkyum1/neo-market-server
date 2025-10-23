@@ -49,7 +49,7 @@ class PurchaseService {
     const { userId, page = 1, limit = 10 } = payload;
     const skip = (page - 1) * limit;
 
-    const purchases = await prisma.purchase.findMany({
+    const purchases = await prisma.purchases.findMany({
       where: { userId },
       skip,
       take: limit,
@@ -65,7 +65,7 @@ class PurchaseService {
       },
     });
 
-    const total = await prisma.purchase.count({ where: { userId } });
+    const total = await prisma.purchases.count({ where: { userId } });
 
     return {
       purchases,
@@ -75,7 +75,7 @@ class PurchaseService {
 
   // 🔹 Get purchase by ID
   async getPurchaseById(purchaseId: string, userId: string) {
-    const purchase = await prisma.purchase.findFirst({
+    const purchase = await prisma.purchases.findFirst({
       where: { id: purchaseId, userId },
       include: {
         referral: {
@@ -93,19 +93,19 @@ class PurchaseService {
 
   // 🔹 Get purchase statistics
   async getPurchaseStats(userId: string) {
-    const stats = await prisma.purchase.aggregate({
+    const stats = await prisma.purchases.aggregate({
       where: { userId },
       _count: { id: true },
       _sum: { amount: true },
       _avg: { amount: true },
     });
 
-    const firstPurchase = await prisma.purchase.findFirst({
+    const firstPurchase = await prisma.purchases.findFirst({
       where: { userId },
       orderBy: { purchaseDate: 'asc' },
     });
 
-    const lastPurchase = await prisma.purchase.findFirst({
+    const lastPurchase = await prisma.purchases.findFirst({
       where: { userId },
       orderBy: { purchaseDate: 'desc' },
     });
@@ -123,7 +123,7 @@ class PurchaseService {
   async getAllPurchases(page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
 
-    const purchases = await prisma.purchase.findMany({
+    const purchases = await prisma.purchases.findMany({
       skip,
       take: limit,
       orderBy: { purchaseDate: 'desc' },
@@ -137,7 +137,7 @@ class PurchaseService {
       },
     });
 
-    const total = await prisma.purchase.count();
+    const total = await prisma.purchases.count();
 
     return {
       purchases,

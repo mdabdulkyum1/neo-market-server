@@ -72,11 +72,11 @@ class ReferralService {
 
     return await prisma.$transaction(async (tx) => {
       // Check if this is user's first purchase
-      const existingPurchases = await tx.purchase.count({ where: { userId } });
+      const existingPurchases = await tx.purchases.count({ where: { userId } });
       const isFirstPurchase = existingPurchases === 0;
 
       // Create purchase record
-      const purchase = await tx.purchase.create({
+      const purchase = await tx.purchases.create({
         data: { userId, productId, amount, isFirstPurchase },
       });
 
