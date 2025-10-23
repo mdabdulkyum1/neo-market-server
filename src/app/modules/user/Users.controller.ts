@@ -122,13 +122,13 @@ const getReferralHistory = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not authenticated');
   }
   const options = pickValidFields(req.query, ['limit', 'page']);
-  const data = await userService.getReferralHistory(userId, options);
+  // const data = await userService.getReferralHistory(userId, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Referral history fetched successfully!',
-    data: data,
+    data: "data",
   });
 });
 
