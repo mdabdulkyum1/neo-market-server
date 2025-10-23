@@ -190,61 +190,61 @@ class UserService {
   }
 
   // Get user dashboard data
-  async getUserDashboard(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        dashboard: true,
-        referralsGiven: {
-          include: {
-            referred: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-              },
-            },
-          },
-        },
-      },
-    });
+  // async getUserDashboard(userId: string) {
+  //   const user = await prisma.user.findUnique({
+  //     where: { id: userId },
+  //     include: {
+  //       dashboard: true,
+  //       referralsGiven: {
+  //         include: {
+  //           referred: {
+  //             select: {
+  //               id: true,
+  //               name: true,
+  //               email: true,
+  //               image: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
 
-    if (!user) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-    }
+  //   if (!user) {
+  //     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  //   }
 
-    // Calculate referral statistics
-    const totalReferredUsers = user.referralsGiven.length;
-    const convertedUsers = user.referralsGiven.filter(
-      referral => referral.status === 'CONVERTED'
-    ).length;
+  //   // Calculate referral statistics
+  //   const totalReferredUsers = user.referralsGiven.length;
+  //   const convertedUsers = user.referralsGiven.filter(
+  //     referral => referral.status === 'CONVERTED'
+  //   ).length;
 
-    const referralLink = `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`;
+  //   const referralLink = `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`;
 
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        referralCode: user.referralCode,
-        credits: user.credits,
-        image: user.image,
-      },
-      dashboard: {
-        totalReferredUsers,
-        convertedUsers,
-        totalCreditsEarned: user.dashboard?.totalCredits || 0,
-        referralLink,
-      },
-      recentReferrals: user.referralsGiven.slice(0, 5).map(referral => ({
-        id: referral.id,
-        referredUser: referral.referred,
-        status: referral.status,
-        createdAt: referral.createdAt,
-      })),
-    };
-  }
+  //   return {
+  //     user: {
+  //       id: user.id,
+  //       name: user.name,
+  //       email: user.email,
+  //       referralCode: user.referralCode,
+  //       credits: user.credits,
+  //       image: user.image,
+  //     },
+  //     dashboard: {
+  //       totalReferredUsers,
+  //       convertedUsers,
+  //       totalCreditsEarned: user.dashboard?.totalCredits || 0,
+  //       referralLink,
+  //     },
+  //     recentReferrals: user.referralsGiven.slice(0, 5).map(referral => ({
+  //       id: referral.id,
+  //       referredUser: referral.referred,
+  //       status: referral.status,
+  //       createdAt: referral.createdAt,
+  //     })),
+  //   };
+  // }
 
   // Get referral history
 async getReferralHistory(userId: string, options: IPaginationOptions) {
