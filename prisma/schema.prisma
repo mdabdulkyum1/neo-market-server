@@ -32,7 +32,7 @@ model User {
 
   referralsGiven  Referral[]   @relation("ReferralsGiven")
   referralsGotten Referral[]   @relation("ReferralsGotten")
-  purchases       Purchase[]
+  purchases       Purchases[]
   dashboard       Dashboard?
 
   @@map("users")
@@ -47,7 +47,7 @@ model Referral {
   convertedAt  DateTime?
   createdAt    DateTime        @default(now())
 
-  purchases    Purchase[]      @relation("ReferralPurchase")
+  purchases    Purchases[]      @relation("ReferralPurchase")
 
   referrer     User            @relation("ReferralsGiven", fields: [referrerId], references: [id])
   referred     User            @relation("ReferralsGotten", fields: [referredId], references: [id])
@@ -56,7 +56,7 @@ model Referral {
   @@map("referrals")
 }
 
-model Purchase {
+model Purchases {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   userId          String    @db.ObjectId
   productId       String
