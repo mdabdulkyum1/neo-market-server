@@ -88,13 +88,11 @@ class ReferralService {
         if (referral && referral.status === 'PENDING') {
           const creditAmount = 2;
 
-          // Update referral status + link the purchase via relation
           await tx.referral.update({
             where: { id: referral.id },
             data: {
               status: 'CONVERTED',
-              convertedAt: new Date(),
-              purchases: { connect: { id: purchase.id } }, // ✅ must match relation name
+              convertedAt: new Date()
             },
           });
 
