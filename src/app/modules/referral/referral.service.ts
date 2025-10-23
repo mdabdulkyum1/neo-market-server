@@ -1,7 +1,10 @@
 import httpStatus from 'http-status';
 import prisma from '../../lib/prisma';
 import ApiError from '../../errors/ApiError';
-import { sendReferralBonusEmails, sendReferralBonusEmail } from '../../utils/emailNotifications/referralNotificationService';
+import {
+  sendReferralBonusEmails,
+  sendReferralBonusEmail,
+} from '../../utils/emailNotifications/referralNotificationService';
 
 interface ICreateReferral {
   referrerId: string;
@@ -13,6 +16,14 @@ interface IProcessPurchase {
   userId: string;
   productId: string;
   amount: number;
+}
+
+interface IReferralStats {
+  totalReferredUsers: number;
+  convertedUsers: number;
+  pendingUsers: number;
+  totalCreditsEarned: number;
+  conversionRate: number;
 }
 
 class ReferralService {
@@ -61,23 +72,14 @@ class ReferralService {
 
     return await prisma.$transaction(async (tx) => {
       // Check if this is user's first purchase
-      const existingPurchases = await tx.purchase.count({
-        where: { userId },
-      });
-
+      const existingPurchases = await tx.purchase.count({ where: { userId } });
       const isFirstPurchase = existingPurchases === 0;
 
       // Create purchase record
       const purchase = await tx.purchase.create({
-        data: {
-          userId,
-          productId,
-          amount,
-          isFirstPurchase,
-        },
+        data: { userId, productId, amount, isFirstPurchase },
       });
 
-      // If this is the first purchase, check for referral
       if (isFirstPurchase) {
         const referral = await tx.referral.findFirst({
           where: { referredId: userId },
@@ -92,9 +94,7 @@ class ReferralService {
             data: {
               status: 'CONVERTED',
               convertedAt: new Date(),
-              purchases: {
-                connect: { id: purchase.id },
-              },
+              purchases: { connect: { id: purchase.id } }, // ✅ must match relation name
             },
           });
 
@@ -120,9 +120,7 @@ class ReferralService {
 
           await tx.dashboard.update({
             where: { userId },
-            data: {
-              totalCredits: { increment: creditAmount },
-            },
+            data: { totalCredits: { increment: creditAmount } },
           });
 
           // Send emails asynchronously
@@ -181,11 +179,7 @@ class ReferralService {
         }
       }
 
-      return {
-        purchase,
-        creditsAwarded: isFirstPurchase ? 2 : 0,
-        isFirstPurchase,
-      };
+      return { purchase, creditsAwarded: isFirstPurchase ? 2 : 0, isFirstPurchase };
     });
   }
 
@@ -198,38 +192,27 @@ class ReferralService {
         referralsGiven: {
           include: {
             referred: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-                createdAt: true,
-              },
+              select: { id: true, name: true, email: true, image: true, createdAt: true },
             },
             purchases: {
-              select: {
-                id: true,
-                amount: true,
-                purchaseDate: true,
-              },
+              select: { id: true, amount: true, purchaseDate: true },
             },
           },
         },
       },
     });
 
-    if (!user) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-    }
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
     const totalReferred = user.referralsGiven.length;
     const convertedReferrals = user.referralsGiven.filter(
-      (r) => r.status === 'CONVERTED'
+      (r: typeof user.referralsGiven[number]) => r.status === 'CONVERTED'
     ).length;
     const pendingReferrals = totalReferred - convertedReferrals;
 
     const totalCreditsEarned = user.referralsGiven.reduce(
-      (sum, r) => sum + (r.status === 'CONVERTED' ? 2 : 0),
+      (sum: number, r: typeof user.referralsGiven[number]) =>
+        sum + (r.status === 'CONVERTED' ? 2 : 0),
       0
     );
 
@@ -246,11 +229,8 @@ class ReferralService {
         convertedUsers: convertedReferrals,
         pendingUsers: pendingReferrals,
         totalCreditsEarned,
-        conversionRate:
-          totalReferred > 0
-            ? (convertedReferrals / totalReferred) * 100
-            : 0,
-      },
+        conversionRate: totalReferred > 0 ? (convertedReferrals / totalReferred) * 100 : 0,
+      } as IReferralStats,
       referralLink: `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`,
     };
   }
@@ -259,23 +239,15 @@ class ReferralService {
   async validateReferralCode(referralCode: string) {
     const user = await prisma.user.findUnique({
       where: { referralCode },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        referralCode: true,
-      },
+      select: { id: true, name: true, email: true, image: true, referralCode: true },
     });
 
-    if (!user) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Invalid referral code');
-    }
+    if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'Invalid referral code');
 
     return user;
   }
 
-  // 🔹 Get leaderboard
+  // 🔹 Get referral leaderboard
   async getReferralLeaderboard(limit: number = 10) {
     const topReferrers = await prisma.dashboard.findMany({
       orderBy: [
@@ -285,15 +257,7 @@ class ReferralService {
       ],
       take: limit,
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            referralCode: true,
-          },
-        },
+        user: { select: { id: true, name: true, email: true, image: true, referralCode: true } },
       },
     });
 
