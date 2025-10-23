@@ -190,108 +190,146 @@ class UserService {
   }
 
   // Get user dashboard data
-  // async getUserDashboard(userId: string) {
-  //   const user = await prisma.user.findUnique({
-  //     where: { id: userId },
-  //     include: {
-  //       dashboard: true,
-  //       referralsGiven: {
-  //         include: {
-  //           referred: {
-  //             select: {
-  //               id: true,
-  //               name: true,
-  //               email: true,
-  //               image: true,
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
+  async getUserDashboard(userId: string) {
+    try {
+      // Validate input
+      ValidationUtils.validateUserId(userId);
 
-  //   if (!user) {
-  //     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-  //   }
+      // Get user basic info
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          referralCode: true,
+          credits: true,
+          image: true,
+        },
+      });
 
-  //   // Calculate referral statistics
-  //   const totalReferredUsers = user.referralsGiven.length;
-  //   const convertedUsers = user.referralsGiven.filter(
-  //     referral => referral.status === 'CONVERTED'
-  //   ).length;
+      if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+      }
 
-  //   const referralLink = `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`;
+      // Get dashboard data separately to avoid complex joins
+      const dashboard = await prisma.dashboard.findUnique({
+        where: { userId },
+        select: {
+          referredUsers: true,
+          convertedUsers: true,
+          totalCredits: true,
+        },
+      });
 
-  //   return {
-  //     user: {
-  //       id: user.id,
-  //       name: user.name,
-  //       email: user.email,
-  //       referralCode: user.referralCode,
-  //       credits: user.credits,
-  //       image: user.image,
-  //     },
-  //     dashboard: {
-  //       totalReferredUsers,
-  //       convertedUsers,
-  //       totalCreditsEarned: user.dashboard?.totalCredits || 0,
-  //       referralLink,
-  //     },
-  //     recentReferrals: user.referralsGiven.slice(0, 5).map(referral => ({
-  //       id: referral.id,
-  //       referredUser: referral.referred,
-  //       status: referral.status,
-  //       createdAt: referral.createdAt,
-  //     })),
-  //   };
-  // }
+      // Get recent referrals with limited data
+      const recentReferrals = await prisma.referral.findMany({
+        where: { referrerId: userId },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          referred: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+        },
+      });
+
+      const referralLink = `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`;
+
+      return {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          referralCode: user.referralCode,
+          credits: user.credits,
+          image: user.image,
+        },
+        dashboard: {
+          totalReferredUsers: dashboard?.referredUsers || 0,
+          convertedUsers: dashboard?.convertedUsers || 0,
+          totalCreditsEarned: dashboard?.totalCredits || 0,
+          referralLink,
+        },
+        recentReferrals: recentReferrals.map(referral => ({
+          id: referral.id,
+          referredUser: referral.referred,
+          status: referral.status,
+          createdAt: referral.createdAt,
+        })),
+      };
+    } catch (error) {
+      console.error('Error in getUserDashboard:', error);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to get user dashboard');
+    }
+  }
 
   // Get referral history
-// async getReferralHistory(userId: string, options: IPaginationOptions) {
-//   const { page, limit, skip } = paginationHelper.calculatePagination(options);
+  async getReferralHistory(userId: string, options: IPaginationOptions) {
+    try {
+      // Validate input
+      ValidationUtils.validateUserId(userId);
+      
+      // Validate pagination parameters
+      const validatedPagination = ValidationUtils.validatePagination(options.page, options.limit);
+      const { page, limit, skip } = paginationHelper.calculatePagination({
+        ...options,
+        page: validatedPagination.page,
+        limit: validatedPagination.limit,
+      });
 
-//   const referrals = await prisma.referral.findMany({
-//     where: { referrerId: userId },
-//     include: {
-//       referred: {
-//         select: {
-//           id: true,
-//           name: true,
-//           email: true,
-//           image: true,
-//           createdAt: true,
-//         },
-//       },
-//       purchases: {
-//         select: {
-//           id: true,
-//           amount: true,
-//           purchaseDate: true,
-//           isFirstPurchase: true,
-//         },
-//       },
-//     },
-//     skip,
-//     take: limit,
-//     orderBy: {
-//       createdAt: 'desc',
-//     },
-//   });
+      // Get referrals with basic info only
+      const referrals = await prisma.referral.findMany({
+        where: { referrerId: userId },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          convertedAt: true,
+          referred: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              createdAt: true,
+            },
+          },
+        },
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
 
-//   const total = await prisma.referral.count({
-//     where: { referrerId: userId },
-//   });
+      // Get total count
+      const total = await prisma.referral.count({
+        where: { referrerId: userId },
+      });
 
-//   return {
-//     meta: {
-//       total,
-//       page,
-//       totalPage: Math.ceil(total / limit),
-//       limit,
-//     },
-//     data: referrals,
-//   };
-// }
+      return {
+        meta: {
+          total,
+          page,
+          totalPage: Math.ceil(total / limit),
+          limit,
+        },
+        data: referrals,
+      };
+    } catch (error) {
+      console.error('Error in getReferralHistory:', error);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to get referral history');
+    }
+  }
 
 
   // Delete user (admin only)

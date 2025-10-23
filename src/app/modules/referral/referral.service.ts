@@ -207,56 +207,73 @@ class ReferralService {
   }
 
   // 🔹 Get referral stats
-  // async getReferralStats(userId: string) {
-  //   const user = await prisma.user.findUnique({
-  //     where: { id: userId },
-  //     include: {
-  //       dashboard: true,
-  //       referralsGiven: {
-  //         include: {
-  //           referred: {
-  //             select: { id: true, name: true, email: true, image: true, createdAt: true },
-  //           },
-  //           purchases: {
-  //             select: { id: true, amount: true, purchaseDate: true },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
+  async getReferralStats(userId: string) {
+    try {
+      // Validate input
+      ValidationUtils.validateUserId(userId);
 
-  //   if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+      // Get user basic info
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          referralCode: true,
+          credits: true,
+        },
+      });
 
-  //   const totalReferred = user.referralsGiven.length;
-  //   const convertedReferrals = user.referralsGiven.filter(
-  //     (r: typeof user.referralsGiven[number]) => r.status === 'CONVERTED'
-  //   ).length;
-  //   const pendingReferrals = totalReferred - convertedReferrals;
+      if (!user) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
-  //   const totalCreditsEarned = user.referralsGiven.reduce(
-  //     (sum: number, r: typeof user.referralsGiven[number]) =>
-  //       sum + (r.status === 'CONVERTED' ? 2 : 0),
-  //     0
-  //   );
+      // Get dashboard data with error handling
+      const dashboard = await prisma.dashboard.findUnique({
+        where: { userId },
+        select: {
+          referredUsers: true,
+          convertedUsers: true,
+          totalCredits: true,
+        },
+      });
 
-  //   return {
-  //     user: {
-  //       id: user.id,
-  //       name: user.name,
-  //       email: user.email,
-  //       referralCode: user.referralCode,
-  //       credits: user.credits,
-  //     },
-  //     stats: {
-  //       totalReferredUsers: totalReferred,
-  //       convertedUsers: convertedReferrals,
-  //       pendingUsers: pendingReferrals,
-  //       totalCreditsEarned,
-  //       conversionRate: totalReferred > 0 ? (convertedReferrals / totalReferred) * 100 : 0,
-  //     } as IReferralStats,
-  //     referralLink: `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`,
-  //   };
-  // }
+      // Get referral counts separately to avoid complex joins
+      const [totalReferred, convertedCount] = await Promise.all([
+        prisma.referral.count({
+          where: { referrerId: userId },
+        }),
+        prisma.referral.count({
+          where: { 
+            referrerId: userId,
+            status: 'CONVERTED'
+          },
+        }),
+      ]);
+
+      const pendingReferrals = totalReferred - convertedCount;
+      const totalCreditsEarned = dashboard?.totalCredits || 0;
+
+      return {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          referralCode: user.referralCode,
+          credits: user.credits,
+        },
+        stats: {
+          totalReferredUsers: totalReferred,
+          convertedUsers: convertedCount,
+          pendingUsers: pendingReferrals,
+          totalCreditsEarned,
+          conversionRate: totalReferred > 0 ? (convertedCount / totalReferred) * 100 : 0,
+        } as IReferralStats,
+        referralLink: `${process.env.FRONTEND_URL}/register?r=${user.referralCode}`,
+      };
+    } catch (error) {
+      console.error('Error in getReferralStats:', error);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to get referral stats');
+    }
+  }
 
   // 🔹 Validate referral code
   async validateReferralCode(referralCode: string) {

@@ -105,13 +105,13 @@ const getUserDashboard = catchAsync(async (req: Request, res: Response) => {
   if (!userId) {
     throw new Error('User not authenticated');
   }
-  // const data = await userService.getUserDashboard(userId);
+  const data = await userService.getUserDashboard(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Dashboard data fetched successfully!',
-    data: "data",
+    data: data,
   });
 });
 
@@ -122,13 +122,13 @@ const getReferralHistory = catchAsync(async (req: Request, res: Response) => {
     throw new Error('User not authenticated');
   }
   const options = pickValidFields(req.query, ['limit', 'page']);
-  // const data = await userService.getReferralHistory(userId, options);
+  const data = await userService.getReferralHistory(userId, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Referral history fetched successfully!',
-    data: "data",
+    data: data,
   });
 });
 

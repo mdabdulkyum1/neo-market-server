@@ -10,13 +10,13 @@ const getReferralStats = catchAsync(async (req: Request, res: Response) => {
   if (!userId) {
     throw new Error('User not authenticated');
   }
-  // const data = await referralService.getReferralStats(userId);
+  const data = await referralService.getReferralStats(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Referral statistics fetched successfully!',
-    data: "data",
+    data: data,
   });
 });
 
