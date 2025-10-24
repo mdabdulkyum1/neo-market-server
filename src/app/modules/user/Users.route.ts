@@ -8,7 +8,7 @@ const router = express.Router();
 // User profile routes
 router.get('/me', auth(), UsersController.getMyProfile);
 router.put('/update-profile', auth(), UsersController.updateMyProfile);
-router.post('/me/uploads-profile-photo', auth(), UsersController.updateMyProfileImage);
+router.patch('/me/uploads-profile-photo', auth(), UsersController.updateMyProfileImage);
 
 // Admin routes
 router.get('/all', auth(Role.ADMIN), UsersController.getAllUsers);

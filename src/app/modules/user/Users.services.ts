@@ -160,34 +160,30 @@ class UserService {
   }
 
   // Update user profile image
-  async updateMyProfileImage(userId: string, payload: any, file: any) {
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { image: true },
-    });
+async  updateMyProfileImage(userId: string, image: string) {
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { image: true },
+  });
 
-    if (!existingUser) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-    }
-
-    // Generate the new image URL if a file is provided
-    const imageURL =
-      file && file.originalname 
-        ? `${payload.protocol}://${payload.host}/uploads/${file.filename}` 
-        : existingUser.image;
-
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: { image: imageURL },
-      select: {
-        id: true,
-        name: true,
-        image: true,
-      },
-    });
-
-    return updatedUser;
+  if (!existingUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { image: image },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+    },
+  });
+
+  return updatedUser;
+}
+
 
   // Get user dashboard data
   async getUserDashboard(userId: string) {

@@ -61,19 +61,22 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
 const updateMyProfileImage = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id;
   if (!userId) {
-    throw new Error('User not authenticated');
+    throw new Error("User not authenticated");
   }
-  const file = (req as any).file;
-  const data = await userService.updateMyProfileImage(
-    userId,
-    { host: req.header('host'), protocol: req.protocol },
-    file
-  );
+
+  const { image } = req.body;
+
+  if (!image) {
+    throw new Error("Image URL is required");
+  }
+
+  const updatedUser = await userService.updateMyProfileImage(userId, image);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Profile updated successfully!',
-    data: data,
+    message: "Profile image updated successfully!",
+    data: updatedUser,
   });
 });
 
