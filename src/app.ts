@@ -9,10 +9,13 @@ import router from "./app/routes";
 const app: Application = express();
 
 const authOptions = {
-   origin: true,
-   credentials: true,
-   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
- }
+  origin: [
+    "http://localhost:3000",            
+    "https://neo-market-client.vercel.app",    
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+};
 
 app.use(
   cors(authOptions)
