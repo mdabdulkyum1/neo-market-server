@@ -101,6 +101,16 @@ src/
 - Email verification and password reset OTPs
 - Expiration handling
 
+
+### Postman collections
+```
+docs/
+|---- Neo Market Server API.postman_collection.json
+       or
+|---- postman-collection.json
+
+```
+
 ## 🔌 API Endpoints
 
 ### Authentication (`/api/auth`)
