@@ -75,7 +75,7 @@ ${process.env.FRONTEND_URL || 'https://neomarket.com'}/register?r=${referralCode
           <!-- Action Button -->
 <tr>
 <td align="center" style="padding:20px 40px;">
-<a href="${process.env.FRONTEND_URL || 'https://neomarket.com'}/dashboard" 
+<a href="${process.env.FRONTEND_URL || 'https://neo-market-client.vercel.app/dashboard'}/dashboard" 
    style="display:inline-block; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#ffffff; text-decoration:none; padding:15px 30px; border-radius:25px; font-weight:600; font-size:16px;">
    View Dashboard
 </a>

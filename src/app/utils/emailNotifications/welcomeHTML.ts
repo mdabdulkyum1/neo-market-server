@@ -68,7 +68,7 @@ ${referralCode}
 <p style="margin:0 0 15px 0; font-size:16px; color:#2c3e50; font-weight:600;">🔗 Your Referral Link</p>
 <div style="background:#ffffff; border:2px dashed #667eea; border-radius:6px; padding:15px; margin:10px 0;">
 <p style="margin:0; font-size:14px; color:#667eea; word-break:break-all; font-family:monospace;">
-${process.env.FRONTEND_URL || 'https://neomarket.com'}/register?r=${referralCode}
+${process.env.FRONTEND_URL || 'https://neo-market-client.vercel.app'}/register?r=${referralCode}
 </p>
 </div>
 <p style="margin:10px 0 0 0; font-size:12px; color:#7f8c8d;">Share this link and earn 2 credits for each successful referral!</p>
@@ -80,11 +80,11 @@ ${process.env.FRONTEND_URL || 'https://neomarket.com'}/register?r=${referralCode
 <tr>
 <td align="center" style="padding:20px 40px;">
 <div style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap;">
-<a href="${process.env.FRONTEND_URL || 'https://neomarket.com'}/dashboard" 
+<a href="${process.env.FRONTEND_URL || 'https://neo-market-client.vercel.app'}/dashboard" 
    style="display:inline-block; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#ffffff; text-decoration:none; padding:15px 30px; border-radius:25px; font-weight:600; font-size:16px;">
    View Dashboard
 </a>
-<a href="${process.env.FRONTEND_URL || 'https://neomarket.com'}/products" 
+<a href="${process.env.FRONTEND_URL || 'https://neo-market-client.vercel.app'}/products" 
    style="display:inline-block; background:transparent; color:#667eea; text-decoration:none; padding:15px 30px; border:2px solid #667eea; border-radius:25px; font-weight:600; font-size:16px;">
    Browse Products
 </a>
