@@ -68,6 +68,12 @@ src/
 
 ## 🗄️ Database Schema
 
+
+# Schema Diagram 
+
+<img src"" alt="Diagram" width="600">
+
+
 ### User Model
 - Basic user information (name, email, password)
 - Unique referral code for sharing
@@ -232,24 +238,7 @@ POST /api/purchases/simulate
 GET /api/users/dashboard
 ```
 
-### 4. Test Stripe Payments
-```bash
-# Create payment intent
-POST /api/purchases/payment-intent
-{
-  "productId": "PROD_123",
-  "amount": 29.99,
-  "currency": "usd"
-}
-
-# Confirm payment (after frontend processes payment)
-POST /api/purchases/confirm-payment
-{
-  "paymentIntentId": "pi_1234567890"
-}
-```
-
-### 5. Test Email Notifications
+### 4. Test Email Notifications
 ```bash
 # Test referral bonus email
 POST /api/email/test/referral-bonus
@@ -300,7 +289,7 @@ POST /api/email/test/welcome
 
 ## 🎯 Assignment Requirements Compliance
 
-✅ **User & Authentication**: Secure registration, login, logout with JWT
+✅ **User & Authentication**: Secure registration, login, logout with NextAuth by JWT
 ✅ **Referral Management**: Unique referral codes, relationship tracking
 ✅ **Purchases**: Purchase simulation with credit rewards
 ✅ **User Dashboard**: Complete analytics and referral tracking
@@ -329,5 +318,3 @@ For detailed API documentation, you can use tools like Postman or create a Swagg
 - `npx prisma db push` - Push schema changes to database
 - `npx prisma generate` - Generate Prisma client
 
-
-**Built with ❤️ for FileSure Assignment**
