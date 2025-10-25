@@ -69,9 +69,10 @@ src/
 ## 🗄️ Database Schema
 
 
-# Schema Diagram 
+# Schema Architecture Diagram 
 
-<img src"" alt="Diagram" width="600">
+<img src="https://raw.githubusercontent.com/mdabdulkyum1/neo-market-server/refs/heads/main/docs/diagram.svg" alt="Diagram" width="600">
+
 
 
 ### User Model
