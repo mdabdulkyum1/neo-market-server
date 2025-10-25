@@ -59,6 +59,13 @@ src/
 └── types/               # Global type definitions
 ```
 
+## Diagram
+
+[FigJam Diagram](https://www.figma.com/board/UZ9sby0OhYHrE3xBgL94Ug/NeoMarket?node-id=1-840&p=f&t=67DXdg1bsEp5DBs2-0)
+
+<img src="https://i.ibb.co.com/BV1v6xz4/Neo-Market.png" alt="App Diagram" width="600" />
+
+
 ## 🗄️ Database Schema
 
 ### User Model
