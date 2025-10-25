@@ -68,7 +68,6 @@ src/
 
 ## 🗄️ Database Schema
 
-
 # Schema Architecture Diagram 
 
 <img src="https://raw.githubusercontent.com/mdabdulkyum1/neo-market-server/refs/heads/main/docs/diagram.svg" alt="Diagram" width="600">
