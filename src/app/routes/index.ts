@@ -4,33 +4,37 @@ import { UserRouters } from "../modules/user/Users.route";
 import { ReferralRouters } from "../modules/referral/referral.routes";
 import { PurchaseRouters } from "../modules/purchase/purchase.routes";
 import { EmailRouters } from "../modules/email/email.routes";
+import { SmsRouters } from "../modules/sms/sms.routes";
 
 const router = express.Router();
 
 const moduleRoutes = [
     {
-        path:"/auth",
+        path: "/auth",
         route: AuthRouters,
     },
     {
-        path:"/users",
+        path: "/users",
         route: UserRouters,
     },
     {
-        path:"/referrals",
+        path: "/referrals",
         route: ReferralRouters,
     },
     {
-        path:"/purchases",
+        path: "/purchases",
         route: PurchaseRouters,
     },
     {
-        path:"/email",
+        path: "/email",
         route: EmailRouters,
-    }
-]
+    },
+    {
+        path: "/",
+        route: SmsRouters,
+    },
+];
 
-moduleRoutes.forEach(route => router.use(route.path, route.route))
+moduleRoutes.forEach(route => router.use(route.path, route.route));
 
-export default router
-
+export default router;

@@ -93,3 +93,19 @@ model OTP {
   @@unique([userId, otpCode])
   @@map("otp")
 }
+
+model SmsOtp {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  phone     String
+  otp       String?
+  body      String
+  sender    String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([phone])
+  @@index([expiresAt])
+  @@map("sms_otps")
+}
+

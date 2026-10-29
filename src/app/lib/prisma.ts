@@ -5,5 +5,5 @@ const prisma = new PrismaClient({
     timeout: 10000, // 10 seconds
   },
 });
-export default prisma;
 
+export default prisma;
