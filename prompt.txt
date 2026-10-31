@@ -1,9 +1,0 @@
-(IVACBD) For security, type the following sequence when prompted Four_Two_Five_Five_Four_Seven
-
-(IVACBD) For security, type the following sequence when prompted Four-Two-Five-Five-Four-Seven
-
-some itmes pattern changes like _ and - or etc 
-
-otp is one to nine 
-
-so extractOtp fun needs dynamic any changes this functions can convert 425547 and save to db.
